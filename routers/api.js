@@ -1,25 +1,21 @@
 const express = require("express");
 const router = express.Router();
-
-const genreController = require("../controller/genreController");
+const penulisController = require("../controller/penulisController");
 const komikController = require("../controller/komikController");
-const userController = require("../controller/userController");
+const genreController = require("../controller/genreController");
 const authMiddleware = require("../middleware/authMiddleware");
 
-router.post("/register", userController.register);
-router.post("/login", userController.login);
+router.post("/register", penulisController.register);
+router.post("/login", penulisController.login);
 
-router.get("/komik", komikController.getAllKomik);
-router.get("/komik/:id", komikController.getKomikById);
+router.get("/genre", authMiddleware, genreController.getAll);
+router.post("/genre", authMiddleware, genreController.create);
+router.put("/genre/:id", authMiddleware, genreController.update);
+router.delete("/genre/:id", authMiddleware, genreController.remove);
 
-router.post("/komik", authMiddleware, komikController.createKomik);
-router.put("/komik/:id", authMiddleware, komikController.updateKomik);
-router.delete("/komik/:id", authMiddleware, komikController.deleteKomik);
-
-router.get("/genre", authMiddleware, genreController.getAllGenre);
-router.get("/genre/:id", authMiddleware, genreController.getGenreById);
-router.post("/genre", authMiddleware, genreController.createGenre);
-router.put("/genre/:id", authMiddleware, genreController.updateGenre);
-router.delete("/genre/:id", authMiddleware, genreController.deleteGenre);
+router.get("/komik", authMiddleware, komikController.getAll);
+router.post("/komik", authMiddleware, komikController.create);
+router.put("/komik/:id", authMiddleware, komikController.update);
+router.delete("/komik/:id", authMiddleware, komikController.remove);
 
 module.exports = router;
