@@ -20,9 +20,25 @@ module.exports = (sequelize, DataTypes) => {
         penulis_id: {
             type: DataTypes.INTEGER,
             allowNull: false
-        },
-        // ... (kode relasi/options lanjutan terpotong di bagian bawah)
+        }
+    }, {
+        tableName: "komik",
+        timestamps: true
     });
+
+    Komik.associate = (models) => {
+        Komik.belongsTo(models.Penulis, {
+            foreignKey: "penulis_id",
+            as: "penulis"
+        });
+
+        Komik.belongsToMany(models.Genre, {
+            through: "komik_genre",
+            foreignKey: "komik_id",
+            otherKey: "genre_id",
+            as: "genre"
+        });
+    };
 
     return Komik;
 };
