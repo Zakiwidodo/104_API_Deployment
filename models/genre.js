@@ -9,7 +9,19 @@ module.exports = (sequelize, DataTypes) => {
         genre: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        deskripsi: {
+            type: DataTypes.TEXT,
+            allowNull: true
         }
+    }, {
+        tableName: "genre",
+        timestamps: true
     });
+
+    Genre.associate = (models) => {
+        // ...
+    };
+
     return Genre;
 };
