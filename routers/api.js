@@ -1,35 +1,49 @@
 const express = require("express");
 const router = express.Router();
 
-// Import Controllers
 const penulisController = require("../controller/penulisController");
 const komikController = require("../controller/komikController");
 const genreController = require("../controller/genreController");
+const authMiddleware = require("../middleware/authMiddleware");
 
-// Import & Handle Middleware
-const rawAuth = require("../middleware/authMiddleware");
-const authMiddleware = typeof rawAuth === "function" ? rawAuth : (rawAuth.authMiddleware || rawAuth.authenticate);
+// Helper untuk memilih fungsi controller yang valid
+const getHandler = (controller, ...methods) => {
+  for (const m of methods) {
+    if (typeof controller[m] === "function") return controller[m];
+  }
+  return (req, res) => res.status(500).json({ message: "Handler tidak ditemukan" });
+};
 
 // ==========================================
 // 1. AUTH / PENULIS ROUTES
 // ==========================================
-router.post("/register", penulisController.register || penulisController.createPenulis || penulisController.create);
-router.post("/login", penulisController.login);
+router.post("/register", getHandler(penulisController, "register", "createPenulis", "create"));
+router.post("/login", getHandler(penulisController, "login"));
 
 // ==========================================
-// 2. GENRE ROUTES
+// 2. GENRE ROUTES (Dukungan singular & plural)
 // ==========================================
-router.get("/genre", authMiddleware, genreController.getAll || genreController.getAllGenre || genreController.findAll);
-router.post("/genre", authMiddleware, genreController.create || genreController.createGenre || genreController.add);
-router.put("/genre/:id", authMiddleware, genreController.update || genreController.updateGenre || genreController.edit);
-router.delete("/genre/:id", authMiddleware, genreController.remove || genreController.deleteGenre || genreController.destroy || genreController.delete);
+const genreGetAll = getHandler(genreController, "getAll", "getAllGenre", "findAll", "index");
+const genreCreate = getHandler(genreController, "create", "createGenre", "add");
+const genreUpdate = getHandler(genreController, "update", "updateGenre", "edit");
+const genreDelete = getHandler(genreController, "remove", "deleteGenre", "destroy", "delete");
+
+router.get(["/genre", "/genres"], authMiddleware, genreGetAll);
+router.post(["/genre", "/genres"], authMiddleware, genreCreate);
+router.put(["/genre/:id", "/genres/:id"], authMiddleware, genreUpdate);
+router.delete(["/genre/:id", "/genres/:id"], authMiddleware, genreDelete);
 
 // ==========================================
-// 3. KOMIK ROUTES
+// 3. KOMIK ROUTES (Dukungan singular & plural)
 // ==========================================
-router.get("/komik", authMiddleware, komikController.getAll || komikController.getAllKomik || komikController.findAll);
-router.post("/komik", authMiddleware, komikController.create || komikController.createKomik || komikController.add);
-router.put("/komik/:id", authMiddleware, komikController.update || komikController.updateKomik || komikController.edit);
-router.delete("/komik/:id", authMiddleware, komikController.remove || komikController.deleteKomik || komikController.destroy || komikController.delete);
+const komikGetAll = getHandler(komikController, "getAll", "getAllKomik", "findAll", "index");
+const komikCreate = getHandler(komikController, "create", "createKomik", "add");
+const komikUpdate = getHandler(komikController, "update", "updateKomik", "edit");
+const komikDelete = getHandler(komikController, "remove", "deleteKomik", "destroy", "delete");
+
+router.get(["/komik", "/komiks"], authMiddleware, komikGetAll);
+router.post(["/komik", "/komiks"], authMiddleware, komikCreate);
+router.put(["/komik/:id", "/komiks/:id"], authMiddleware, komikUpdate);
+router.delete(["/komik/:id", "/komiks/:id"], authMiddleware, komikDelete);
 
 module.exports = router;

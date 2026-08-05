@@ -6,9 +6,10 @@ const Penulis = db.Penulis;
 
 async function register(req, res) {
     try {
-        const { name, email, password } = req.body;
+        const nama = req.body.nama || req.body.name;
+        const { email, password } = req.body;
 
-        if (!name || !email || !password) {
+        if (!nama || !email || !password) {
             return res.status(400).json({
                 message: "Nama, email, dan password wajib diisi"
             });
@@ -27,8 +28,8 @@ async function register(req, res) {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const penulis = await Penulis.create({
-            name,
-            email,
+            nama: nama,
+            email: email,
             password: hashedPassword
         });
 
@@ -36,7 +37,7 @@ async function register(req, res) {
             message: "Registrasi berhasil",
             data: {
                 id: penulis.id,
-                name: penulis.name,
+                nama: penulis.nama,
                 email: penulis.email
             }
         });
@@ -82,12 +83,12 @@ async function login(req, res) {
         const token = jwt.sign(
             {
                 id: penulis.id,
-                name: penulis.name,
+                nama: penulis.nama,
                 email: penulis.email
             },
-            process.env.JWT_SECRET,
+            process.env.JWT_SECRET || 'secret_key_fallback',
             {
-                expiresIn: process.env.JWT_EXPIRES
+                expiresIn: process.env.JWT_EXPIRES || '1d'
             }
         );
 
