@@ -7,7 +7,8 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/api', require('./routes/api'));
+// Diubah dari './routes/api' menjadi './routers/api'
+app.use('/api', require('./routers/api'));
 
 async function startServer() {
     await connectToDatabase();
