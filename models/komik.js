@@ -1,22 +1,28 @@
 module.exports = (sequelize, DataTypes) => {
-    const Komik = sequelize.define('Komik', {
+    const Komik = sequelize.define("Komik", {
         id: {
             type: DataTypes.INTEGER,
-            autoIncrement: true,
-            primaryKey: true
+            primaryKey: true,
+            autoIncrement: true
         },
-
-        title: {
+        judul: {
             type: DataTypes.STRING,
+            allowNull: false
         },
-
-        description: {
-            type: DataTypes.STRING,
+        sinopsis: {
+            type: DataTypes.TEXT,
+            allowNull: false
         },
-
-        author: {
-            type: DataTypes.STRING,
-        }
+        tahun_terbit: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        penulis_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        },
+        // ... (kode relasi/options lanjutan terpotong di bagian bawah)
     });
+
     return Komik;
 };
