@@ -1,49 +1,56 @@
 const express = require("express");
-const router = express.Router();
+const cors = require("cors");
+const app = express();
 
-const penulisController = require("../controller/penulisController");
-const komikController = require("../controller/komikController");
-const genreController = require("../controller/genreController");
-const authMiddleware = require("../middleware/authMiddleware");
+// 1. Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Helper untuk memilih fungsi controller yang valid
-const getHandler = (controller, ...methods) => {
-  for (const m of methods) {
-    if (typeof controller[m] === "function") return controller[m];
+// 2. Route Root/Utama (Mencegah tampilan "Serverless Function crashed" di Vercel)
+app.get("/", (req, res) => {
+  res.send("API Serverless is running successfully!");
+});
+
+// 3. Import Router API (Dengan pengaman otomatis)
+try {
+  // Coba muat dari ./routes/api atau ./routes/index
+  const apiRoutes = require("./routes/api");
+  app.use("/api", apiRoutes);
+} catch (error) {
+  try {
+    const apiRoutes = require("./routes");
+    app.use("/api", apiRoutes);
+  } catch (err) {
+    console.error("Error loading routes:", err.message);
   }
-  return (req, res) => res.status(500).json({ message: "Handler tidak ditemukan" });
-};
+}
 
-// ==========================================
-// 1. AUTH / PENULIS ROUTES
-// ==========================================
-router.post("/register", getHandler(penulisController, "register", "createPenulis", "create"));
-router.post("/login", getHandler(penulisController, "login"));
+// 4. Middleware 404 Endpoint Not Found
+app.use((req, res, next) => {
+  res.status(404).json({
+    status: false,
+    message: "Endpoint not found",
+  });
+});
 
-// ==========================================
-// 2. GENRE ROUTES (Dukungan singular & plural)
-// ==========================================
-const genreGetAll = getHandler(genreController, "getAll", "getAllGenre", "findAll", "index");
-const genreCreate = getHandler(genreController, "create", "createGenre", "add");
-const genreUpdate = getHandler(genreController, "update", "updateGenre", "edit");
-const genreDelete = getHandler(genreController, "remove", "deleteGenre", "destroy", "delete");
+// 5. Middleware Global Error Handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    status: false,
+    message: "Internal Server Error",
+    error: err.message,
+  });
+});
 
-router.get(["/genre", "/genres"], authMiddleware, genreGetAll);
-router.post(["/genre", "/genres"], authMiddleware, genreCreate);
-router.put(["/genre/:id", "/genres/:id"], authMiddleware, genreUpdate);
-router.delete(["/genre/:id", "/genres/:id"], authMiddleware, genreDelete);
+// 6. Jalankan Server jika di lingkungan Lokal (Development)
+const PORT = process.env.PORT || 3000;
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`Server running locally on http://localhost:${PORT}`);
+  });
+}
 
-// ==========================================
-// 3. KOMIK ROUTES (Dukungan singular & plural)
-// ==========================================
-const komikGetAll = getHandler(komikController, "getAll", "getAllKomik", "findAll", "index");
-const komikCreate = getHandler(komikController, "create", "createKomik", "add");
-const komikUpdate = getHandler(komikController, "update", "updateKomik", "edit");
-const komikDelete = getHandler(komikController, "remove", "deleteKomik", "destroy", "delete");
-
-router.get(["/komik", "/komiks"], authMiddleware, komikGetAll);
-router.post(["/komik", "/komiks"], authMiddleware, komikCreate);
-router.put(["/komik/:id", "/komiks/:id"], authMiddleware, komikUpdate);
-router.delete(["/komik/:id", "/komiks/:id"], authMiddleware, komikDelete);
-
-module.exports = router;
+// 7. Export module untuk Vercel Serverless Function
+module.exports = app;
