@@ -2,12 +2,10 @@ const express = require("express");
 const connectDatabase = require("./config/db");
 
 const app = express();
-const PORT = 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- LOGIKA KONEKSI DATABASE DARI LAYAR TV ---
 let databaseReady = false;
 let databasePromise = null;
 
@@ -27,15 +25,12 @@ app.use(async (req, res, next) => {
     console.error("Database initialization failed:", error.message);
 
     databasePromise = null;
-    next(error); // 👈 Menambahkan penanganan error agar request tidak hanging saat DB error
+    return res.status(500).json({
+      message: "Database initialization failed."
+    });
   }
 });
-// ---------------------------------------------
 
-// Router milik kamu
-app.use("/api", require("./routers/api"));
+app.use("/api", require("./routes/api"));
 
-// Jalankan Server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+module.exports = app;
