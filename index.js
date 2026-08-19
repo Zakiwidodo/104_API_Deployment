@@ -2,23 +2,22 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 
-// 1. Middleware
+// 1. Middleware Global
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 2. Route Utama (Mencegah Vercel Serverless Crash)
+// 2. Route Root / Health Check (Mencegah Vercel Serverless Function Crash)
 app.get("/", (req, res) => {
-  res.status(200).send("API Serverless is running successfully!");
+  res.send("API Serverless is running successfully!");
 });
 
-// 3. Import Router API dengan Safe Fallback
-// Mencegah crash jika struktur folder routes menggunakan index.js atau nama lain
+// 3. Import Router API (Diarsipkan langsung ke folder ./routers/api)
 try {
-  const routes = require("./routes");
-  app.use("/api", routes);
+  const apiRoutes = require("./routers/api");
+  app.use("/api", apiRoutes);
 } catch (error) {
-  console.log("Custom routes notice:", error.message);
+  console.error("Error loading API routes:", error.message);
 }
 
 // 4. Middleware 404 Endpoint Not Found
@@ -39,7 +38,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 6. Jalankan Server jika di lingkungan Lokal
+// 6. Listener Server Lokal (Development)
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
@@ -47,5 +46,5 @@ if (process.env.NODE_ENV !== "production") {
   });
 }
 
-// 7. Export module untuk Vercel Serverless Function
+// 7. Export App untuk Vercel Serverless Function
 module.exports = app;
